@@ -158,7 +158,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <!-- コメント文例 -->
   <section class="view" id="v-cmt">
     <div class="chips" id="cgroups">
-      <button class="chip on" data-g="like">いいねのお礼</button>
+      <button class="chip on" data-g="follow">フォローのお礼</button>
       <button class="chip" data-g="cmt">コメントのお礼</button>
       <button class="chip" data-g="out">こちらからコメント</button>
     </div>
@@ -696,15 +696,15 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden) upd
 
 /* ---------- コメント文例 ---------- */
 var CMT_SETS={
-  like:[
-    "いいねありがとうございます😊 励みになります!",
-    "見ていただいてありがとうございます✨ いいね、とても嬉しいです。",
-    "いいねをいただけて嬉しいです! これからも暮らしに役立つものを紹介していきますね🍀",
-    "ありがとうございます🙌 そちらのROOMも参考にさせてください。",
-    "素敵なお気持ちをありがとうございます☺️ また遊びに来てくださいね。",
-    "いいね嬉しいです! 気になる商品があれば、いつでも見てみてくださいね📌",
-    "ご覧いただきありがとうございました。これからも少しずつ投稿していきます。",
-    "いいねありがとうございます!お返しにお邪魔しますね👋"
+  follow:[
+    "フォローありがとうございます😊 とても嬉しいです!",
+    "フォローしていただき、ありがとうございます✨ よろしくお願いします。",
+    "フォローをいただけて光栄です! これからも役立つ商品を紹介していきますね🍀",
+    "ありがとうございます🙌 こちらからもフォローさせていただきますね。",
+    "見つけてくださってありがとうございます☺️ ゆっくり見ていってくださいね。",
+    "フォロー嬉しいです! 気になる商品があれば、ぜひ覗いてみてください📌",
+    "フォローありがとうございます。これからもマイペースに投稿していきます。",
+    "はじめまして!フォローありがとうございます。仲良くしてくださいね👋"
   ],
   cmt:[
     "コメントありがとうございます😊 とても嬉しいです!",
@@ -729,7 +729,7 @@ var CMT_SETS={
     "季節にぴったりのアイテムですね🍂 素敵な投稿をありがとうございます。"
   ]
 };
-var cg="like",cCur={like:-1,cmt:-1,out:-1},cQueue={like:[],cmt:[],out:[]};
+var cg="follow",cCur={follow:-1,cmt:-1,out:-1},cQueue={follow:[],cmt:[],out:[]};
 function cBuild(t){
   var n=$("cname").value.trim().replace(/さん$/,""),m=$("cmine").value.trim();
   return (n?n+"さん、":"")+t+(m?" "+m:"");
