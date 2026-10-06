@@ -36,7 +36,7 @@ header p{margin:2px 0 0;font-size:13px;color:var(--sub)}
 main{padding:0 12px calc(90px + env(safe-area-inset-bottom,0px))}
 .view{display:none}.view.on{display:block}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
-nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:13px;padding:10px 0 12px;position:relative}
+nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:12.5px;padding:10px 0 12px;position:relative}
 nav button.on{color:var(--navy);font-weight:700}
 nav button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;background:var(--navy);border-radius:0 0 3px 3px}
 .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:3px;border-radius:9px;background:var(--room);color:#fff;font-size:11px;line-height:18px}
@@ -80,6 +80,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .st{font-size:12px;font-weight:700}
 .st.new{color:var(--warn)}.st.done{color:var(--ok)}.st.again{color:var(--room)}
 .li button{border:0;background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;flex:none}
+.banner{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:var(--card);border-left:5px solid var(--room);font-size:14px;line-height:1.6}
+.banner[hidden]{display:none}
+.sold{font-size:12px;color:var(--ok);font-weight:700}
+.tp{background:var(--card);border-radius:14px;padding:12px;margin-bottom:12px}
+.tp h3{margin:0 0 6px;font-size:15px}
+.tp .li{background:var(--bg);margin-bottom:6px}
+.tp .li button{background:var(--card)}
+.cmtbox{white-space:pre-wrap;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;margin:10px 0;min-height:56px;line-height:1.7}
+.cc{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;font:inherit;color:inherit;line-height:1.6;cursor:pointer}
+.cc small{display:block;color:var(--sub);font-size:11.5px;margin-top:3px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;white-space:nowrap}
 .toast.on{opacity:1}
 .steps{margin:0;padding-left:20px;font-size:14px}
@@ -94,6 +104,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </header>
 
 <main>
+  <div id="banner" class="banner" hidden></div>
   <!-- 商品をさがす -->
   <section class="view on" id="v-search">
     <div class="panel">
@@ -123,13 +134,46 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
   <!-- 投稿リスト -->
   <section class="view" id="v-list">
+    <div id="today"></div>
     <div class="chips" id="filters">
       <button class="chip on" data-f="new">未投稿</button>
       <button class="chip" data-f="again">再投稿の候補</button>
+      <button class="chip" data-f="hot">売れ筋</button>
       <button class="chip" data-f="done">投稿済み</button>
       <button class="chip" data-f="all">すべて</button>
     </div>
     <div id="list"></div>
+    <div class="panel" style="margin-top:14px">
+      <b>売れ行きの取り込み</b>
+      <p class="hint">楽天アフィリエイトの「レポート」で、商品ごとの成果が見られる画面からCSVをダウンロードして、ここで選びます。件数と報酬が多い商品が「売れ筋」になり、再投稿の先頭に並びます。</p>
+      <input type="file" id="csvfile" accept=".csv,.tsv,.txt,text/csv">
+      <label for="csvtext">ファイルが選べないときは、CSVの中身をここに貼り付け</label>
+      <textarea id="csvtext" style="min-height:90px" spellcheck="false"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn main" id="csvgo">売れ行きを読み込む</button>
+      <div id="impres"></div>
+    </div>
+  </section>
+
+  <!-- コメント文例 -->
+  <section class="view" id="v-cmt">
+    <div class="chips" id="cgroups">
+      <button class="chip on" data-g="like">いいねのお礼</button>
+      <button class="chip" data-g="cmt">コメントのお礼</button>
+      <button class="chip" data-g="out">こちらからコメント</button>
+    </div>
+    <div class="panel">
+      <label for="cname">相手のお名前(任意)</label>
+      <input id="cname" placeholder="例:はなこ(「さん」は自動で付きます)" autocomplete="off">
+      <label for="cmine">ひとこと足す(任意)</label>
+      <input id="cmine" placeholder="自分の感想を足すと自然です" autocomplete="off">
+      <div class="cmtbox" id="cshow"></div>
+      <div class="row"><button class="btn plain" id="cnext">別の文例</button><button class="btn main" id="ccopy">コピー</button></div>
+      <a class="btn room" href="https://room.rakuten.co.jp/" target="_blank" rel="noopener" style="margin-top:8px">楽天ROOMを開く</a>
+      <p class="hint">「別の文例」は、全部の文例を1回ずつ使い切るまで同じものを出しません。</p>
+    </div>
+    <p class="hint" style="margin:0 4px 8px">下の一覧は、タップするとそのままコピーされます。</p>
+    <div id="clist"></div>
   </section>
 
   <!-- 設定 -->
@@ -144,8 +188,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <label for="days">再投稿の候補にする日数</label>
       <input id="days" type="number" inputmode="numeric" value="30">
       <p class="hint">投稿済みにしてからこの日数がたった商品を「再投稿の候補」に出します。</p>
+      <label for="daysHot">売れ筋(売れた実績のある商品)の再投稿間隔(日)</label>
+      <input id="daysHot" type="number" inputmode="numeric">
+      <label for="perDay">「今日の再投稿」に出す件数</label>
+      <input id="perDay" type="number" inputmode="numeric">
       <label for="tags">いつも付けるハッシュタグ</label>
       <input id="tags" placeholder="例:#楽天ROOM #暮らしを整える">
+      <label for="sales">セール日程(1行に「開始,終了,名前」)</label>
+      <textarea id="sales" style="min-height:130px" spellcheck="false"></textarea>
+      <p class="hint">「(予想)」と付いたものは過去の実績からの予想です。楽天の公式発表で確認して、違っていたら直してください。入力例:2026-10-14 20:00,2026-10-17 09:59,お買い物マラソン</p>
       <div style="height:12px"></div>
       <button class="btn main" id="save">設定を保存</button>
     </div>
@@ -168,6 +219,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 <nav>
   <button class="on" data-v="search">さがす</button>
+  <button data-v="cmt">コメント</button>
   <button data-v="list">投稿リスト<span class="badge" id="nbadge" hidden></span></button>
   <button data-v="set">設定</button>
 </nav>
@@ -191,6 +243,10 @@ function load(k,d){try{var v=localStorage.getItem("rn_"+k);return v===null?d:JSO
 function store(k,v){try{localStorage.setItem("rn_"+k,JSON.stringify(v));return true}catch(e){return false}}
 var S = load("settings",{appid:"",akey:"",affid:"",days:30,tags:"#楽天ROOM #楽天市場",tpl:DEFAULT_TPL});
 if(!S.tpl||S.tplVer!==TPL_VER){S.tpl=DEFAULT_TPL;S.tplVer=TPL_VER;store("settings",S)}
+var DEF_SALES=["2026-10-04 20:00,2026-10-09 01:59,お買い物マラソン","2026-10-14 20:00,2026-10-17 09:59,お買い物マラソン(予想)","2026-10-24 20:00,2026-10-27 09:59,お買い物マラソン(予想)","2026-11-04 20:00,2026-11-11 01:59,お買い物マラソン(予想)","2026-12-04 20:00,2026-12-11 01:59,楽天スーパーSALE(予想)"].join("\n");
+if(S.sales==null) S.sales=DEF_SALES;
+if(S.daysHot==null) S.daysHot=14;
+if(S.perDay==null) S.perDay=3;
 var L = load("list",[]);   // {code,name,price,url,imgs,img,shop,rev,avg,caption,status,postedAt,count,text,addedAt}
 
 var $ = function(id){return document.getElementById(id)};
@@ -203,8 +259,10 @@ function daysSince(t){return t?Math.floor((Date.now()-t)/86400000):null}
 var navs = document.querySelectorAll("nav button");
 function show(v){
   navs.forEach(function(b){b.classList.toggle("on",b.dataset.v===v)});
-  ["search","list","set"].forEach(function(n){$("v-"+n).classList.toggle("on",n===v)});
+  ["search","cmt","list","set"].forEach(function(n){$("v-"+n).classList.toggle("on",n===v)});
   if(v==="list") renderList();
+  if(v==="cmt") renderCmt();
+  updateBanner();
   window.scrollTo(0,0);
 }
 navs.forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
@@ -213,11 +271,14 @@ navs.forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
 function fillSettings(){
   $("appid").value=S.appid;$("akey").value=S.akey;$("affid").value=S.affid;
   $("days").value=S.days;$("tags").value=S.tags;$("tpl").value=S.tpl;
+  $("daysHot").value=S.daysHot;$("perDay").value=S.perDay;$("sales").value=S.sales;
   $("count").textContent="投稿リストに "+L.length+" 件 保存されています。データはこのスマホのブラウザ内だけに保存されます。";
 }
 $("save").onclick=function(){
   S.appid=$("appid").value.trim();S.akey=$("akey").value.trim();S.affid=$("affid").value.trim();
   S.days=Math.max(1,parseInt($("days").value,10)||30);S.tags=$("tags").value.trim();
+  S.daysHot=Math.max(1,parseInt($("daysHot").value,10)||14);S.perDay=Math.max(1,parseInt($("perDay").value,10)||3);
+  S.sales=$("sales").value.trim();updateBanner();
   S.tpl=$("tpl").value.trim()||DEFAULT_TPL;
   toast(store("settings",S)?"設定を保存しました":"保存できませんでした");
 };
@@ -393,6 +454,7 @@ function openSheet(it){
     '<div class="sname">'+esc(it.name)+'</div>'+
     '<div class="meta">'+yen(it.price)+'円 ・ ★'+esc(it.avg)+'('+yen(it.rev)+'件) ・ '+esc(it.shop)+'</div>'+
     (st?'<div class="st '+st.c+'" style="margin-top:4px">'+st.t+'</div>':'')+
+    (saved?'<label>売れ行き(わかる範囲で。売れ筋の順位に使います)</label><div class="row"><input id="sold" type="number" inputmode="numeric" placeholder="売れた件数" value="'+(saved.sold||"")+'" aria-label="売れた件数"><input id="rew" type="number" inputmode="numeric" placeholder="報酬(円)" value="'+(saved.reward||"")+'" aria-label="報酬(円)"></div>':'')+
     '<label for="ptext">紹介文(自由に書きかえられます)</label><textarea id="ptext">'+esc(text)+'</textarea>'+
     '<div style="height:8px"></div>'+
     '<div class="row"><button class="btn plain" id="b-re">別の文章にする</button><button class="btn main" id="b-copy">文章をコピー</button></div>'+
@@ -400,7 +462,7 @@ function openSheet(it){
     '<a class="btn room" id="b-room" href="'+esc(roomUrl(it))+'" target="_blank" rel="noopener">楽天ROOMで投稿する</a>'+
     '<a class="btn plain" href="'+esc(it.itemUrl||it.url)+'" target="_blank" rel="noopener">楽天市場の商品ページを見る</a>'+
     (saved?'<button class="btn plain" id="b-done">投稿済みにする</button><button class="btn plain" id="b-del">投稿リストから外す</button>'
-          :'<button class="btn plain" id="b-add">投稿リストに入れる</button>')+
+          :'<button class="btn plain" id="b-add">投稿リストに入れる</button><button class="btn plain" id="b-addd">すでにROOMに投稿済みとして入れる</button>')+
     '<button class="btn plain" id="b-close">閉じる</button>';
   $("sheet").classList.add("on");
   $("sbox").scrollTop=0;
@@ -412,6 +474,11 @@ function openSheet(it){
   $("b-re").onclick=function(){patIdx++;$("ptext").value=makeText(it,patIdx);var s=inList(it.code);if(s){s.text=$("ptext").value;saveList()}};
   $("b-copy").onclick=function(){copy($("ptext").value,"コピーしました。ROOMの投稿画面に貼り付けてください")};
   $("b-room").onclick=function(){copy($("ptext").value,"文章をコピーして楽天ROOMを開きます");addIfNeeded(it)};
+  if($("sold")){
+    $("sold").oninput=function(){var s=inList(it.code);if(s){s.sold=Math.max(0,parseInt(this.value,10)||0);saveList()}};
+    $("rew").oninput=function(){var s=inList(it.code);if(s){s.reward=Math.max(0,parseInt(this.value,10)||0);saveList()}};
+  }
+  if($("b-addd")) $("b-addd").onclick=function(){addIfNeeded(it);var s=inList(it.code);s.status="done";s.postedAt=Date.now()-(S.days+1)*86400000;s.count=1;saveList();toast("投稿済みとして入れました");openSheet(s)};
   if($("b-add")) $("b-add").onclick=function(){addIfNeeded(it);toast("投稿リストに入れました");openSheet(inList(it.code))};
   if($("b-done")) $("b-done").onclick=function(){markDone(it.code);openSheet(inList(it.code))};
   if($("b-del")) $("b-del").onclick=function(){if(confirm("投稿リストから外しますか?")){L=L.filter(function(x){return x.code!==it.code});saveList();closeSheet();toast("外しました")}};
@@ -441,8 +508,8 @@ function fallback(t){var a=document.createElement("textarea");a.value=t;a.setAtt
 var filter="new";
 function statusOf(x){
   if(x.status!=="done") return {k:"new",c:"new",t:"未投稿"};
-  var d=daysSince(x.postedAt);
-  if(d>=S.days) return {k:"again",c:"again",t:"前回の投稿から"+d+"日・再投稿の候補"};
+  var d=daysSince(x.postedAt),lim=(x.sold>0?S.daysHot:S.days);
+  if(d>=lim) return {k:"again",c:"again",t:"前回の投稿から"+d+"日・再投稿の候補"};
   return {k:"done",c:"done",t:"投稿済み("+(d===0?"今日":d+"日前")+"・"+(x.count||1)+"回目)"};
 }
 function updateBadge(){
@@ -452,23 +519,248 @@ function updateBadge(){
 document.querySelectorAll("#filters .chip").forEach(function(c){c.onclick=function(){
   filter=c.dataset.f;document.querySelectorAll("#filters .chip").forEach(function(x){x.classList.toggle("on",x===c)});renderList();
 }});
+function score(x){return (x.sold||0)*1000000+(x.reward||0)}
+function byScore(a,b){return score(b)-score(a)||((a.postedAt||0)-(b.postedAt||0))}
+function soldText(x){return x.sold>0?'<div class="sold">売れた実績 '+yen(x.sold)+'件'+(x.reward?' ・ 報酬 '+yen(x.reward)+'円':'')+'</div>':''}
+function rowHtml(x,s){
+  return '<div class="li"><img alt="" loading="lazy" src="'+esc(x.img)+'"><div class="b" data-c="'+esc(x.code)+'"><div class="n">'+esc(shortName(x.name))+'</div>'+soldText(x)+'<div class="st '+s.c+'">'+esc(s.t)+'</div></div>'+
+    '<button data-open="'+esc(x.code)+'">開く</button></div>';
+}
+function renderToday(){
+  var el=$("today");if(!el) return;
+  var q=L.filter(function(x){return statusOf(x).k==="again"}).sort(byScore).slice(0,S.perDay);
+  var h='<div class="tp"><h3>今日の再投稿(売れ筋の順に'+S.perDay+'件まで)</h3>';
+  if(!q.length) h+='<div class="hint">再投稿できる商品はまだありません。下の「売れ行きの取り込み」で実績を入れるか、投稿済みにしてから日数がたつと、ここに出ます。</div>';
+  else h+=q.map(function(x){return rowHtml(x,statusOf(x))}).join("")+'<div class="hint">「開く」→「楽天ROOMで投稿する」で投稿し、「投稿済みにする」を押すと、次の再投稿の日まで順番待ちに戻ります。</div>';
+  el.innerHTML=h+'</div>';
+}
 function renderList(){
-  var arr=L.filter(function(x){return filter==="all"||statusOf(x).k===filter});
-  if(filter==="again"||filter==="done") arr.sort(function(a,b){return (a.postedAt||0)-(b.postedAt||0)});
+  renderToday();
+  var arr=L.filter(function(x){if(filter==="all") return true;if(filter==="hot") return x.sold>0;return statusOf(x).k===filter});
+  if(filter==="again"||filter==="hot") arr.sort(byScore);
+  else if(filter==="done") arr.sort(function(a,b){return (a.postedAt||0)-(b.postedAt||0)});
   if(!arr.length){
     var m={new:"未投稿の商品はありません。「さがす」で商品を開き、「投稿リストに入れる」を押すとここに並びます。",
-      again:"再投稿の候補はまだありません。投稿済みにしてから"+S.days+"日たつとここに出ます。",
+      again:"再投稿の候補はまだありません。投稿済みにしてから"+S.days+"日(売れ筋は"+S.daysHot+"日)たつとここに出ます。",
+      hot:"売れ筋はまだありません。下の「売れ行きの取り込み」か、商品の画面の「売れ行き」欄に件数を入れると並びます。",
       done:"投稿済みの商品はまだありません。",all:"投稿リストは空です。「さがす」から商品を追加してください。"}[filter];
     $("list").innerHTML='<div class="msg">'+esc(m)+'</div>';return;
   }
-  $("list").innerHTML=arr.map(function(x){var s=statusOf(x);
-    return '<div class="li"><img alt="" loading="lazy" src="'+esc(x.img)+'"><div class="b" data-c="'+esc(x.code)+'"><div class="n">'+esc(shortName(x.name))+'</div><div class="st '+s.c+'">'+esc(s.t)+'</div></div>'+
-      '<button data-open="'+esc(x.code)+'">開く</button></div>';
-  }).join("");
+  $("list").innerHTML=arr.map(function(x){return rowHtml(x,statusOf(x))}).join("");
   document.querySelectorAll("[data-open],.li .b").forEach(function(b){b.onclick=function(){openSheet(inList(b.dataset.open||b.dataset.c))}});
 }
 
-fillSettings();updateBadge();
+/* ---------- 売れ行きの取り込み(CSV) ---------- */
+function decodeBuf(buf){
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){}
+  try{return new TextDecoder("shift_jis").decode(buf)}catch(e){return new TextDecoder().decode(buf)}
+}
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");
+  var delim=(t.split("\t").length>t.split(",").length)?"\t":",";
+  var rows=[],row=[],f="",q=false;
+  for(var i=0;i<t.length;i++){
+    var c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"') q=true;
+    else if(c===delim){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n") i++;row.push(f);f="";rows.push(row);row=[]}
+    else f+=c;
+  }
+  if(f.length||row.length){row.push(f);rows.push(row)}
+  return rows.filter(function(r){return r.some(function(x){return String(x).trim()})});
+}
+function num(v){var n=parseFloat(String(v==null?"":v).replace(/[,円¥\s]/g,""));return isNaN(n)?0:n}
+function normName(n){return String(n||"").replace(/\s|　|【[^】]*】|\[[^\]]*\]|［[^］]*］/g,"")}
+function analyze(text){
+  var rows=parseCSV(text);
+  if(!rows.length) return {err:"中身が空のようです。"};
+  var hi=-1,H=null;
+  for(var i=0;i<Math.min(rows.length,15);i++){
+    if(rows[i].some(function(c){return /商品名|商品/.test(c)})&&rows[i].length>=2){hi=i;H=rows[i].map(function(x){return String(x).trim()});break}
+  }
+  if(hi<0) return {err:"商品名の列が見つかりませんでした。先頭の行は「"+rows[0].slice(0,6).join(" / ").slice(0,120)+"」でした。この文字を教えてもらえれば対応します。"};
+  function col(re){for(var j=0;j<H.length;j++) if(re.test(H[j])) return j;return -1}
+  var cName=col(/商品名/);if(cName<0) cName=col(/商品/);
+  var cQty=col(/個数|数量|件数/),cRew=col(/報酬/),cSt=col(/ステータス|状態/);
+  var map={},order=[];
+  for(var r=hi+1;r<rows.length;r++){
+    var R=rows[r],nm=String(R[cName]||"").trim();
+    if(!nm) continue;
+    if(cSt>=0&&/破棄|キャンセル|無効/.test(R[cSt]||"")) continue;
+    var key=normName(nm).slice(0,40);
+    if(!map[key]){map[key]={name:nm,sold:0,reward:0};order.push(key)}
+    map[key].sold+=(cQty>=0?num(R[cQty]):1)||1;
+    if(cRew>=0) map[key].reward+=num(R[cRew]);
+  }
+  var items=order.map(function(k){return map[k]}).sort(function(a,b){return b.sold-a.sold||b.reward-a.reward});
+  if(!items.length) return {err:"商品の行が見つかりませんでした。列の見出しは「"+H.slice(0,8).join(" / ").slice(0,140)+"」でした。この文字を教えてもらえれば対応します。"};
+  return {items:items,note:(cQty<0?"件数の列がないため、1行を1件として数えました。":"")+(cRew<0?"報酬の列が見つかりませんでした。":"")};
+}
+function findSaved(name){
+  var a=normName(name);
+  for(var i=0;i<L.length;i++){
+    var b=normName(L[i].name);
+    if(!a||!b) continue;
+    if(a.slice(0,12)===b.slice(0,12)||b.indexOf(a.slice(0,14))>=0||a.indexOf(b.slice(0,14))>=0) return L[i];
+  }
+  return null;
+}
+var pending=[];
+function doParse(text){
+  var out=$("impres");
+  var r;try{r=analyze(text)}catch(e){r={err:"読み込みに失敗しました。"}}
+  if(r.err){out.innerHTML='<div class="msg err">'+esc(r.err)+'</div>';return}
+  var matched=0;pending=[];
+  r.items.forEach(function(it){var m=findSaved(it.name);if(m){m.sold=it.sold;m.reward=it.reward;matched++}else pending.push(it)});
+  saveList();renderList();
+  var h='<div class="msg" style="text-align:left">'+r.items.length+'商品を読み込みました。リストにある'+matched+'件に売れ行きを反映しました。'+esc(r.note||"")+'</div>';
+  if(pending.length){
+    var n=Math.min(20,pending.length);
+    h+='<div class="hint">リストにまだない売れ筋(上位):</div><div class="hint">'+pending.slice(0,5).map(function(x){return esc(shortName(x.name))+'('+x.sold+'件)'}).join("<br>")+'</div><div style="height:8px"></div>'+
+      '<button class="btn room" id="impgo">売れ筋の上位'+n+'件をリストに取り込む</button>';
+  }
+  out.innerHTML=h;
+  if($("impgo")) $("impgo").onclick=importTop;
+}
+function lookup(name){
+  var p={format:"json",formatVersion:"2",applicationId:S.appid,accessKey:S.akey,keyword:name.replace(/【[^】]*】|\[[^\]]*\]|［[^］]*］/g," ").replace(/\s+/g," ").trim().slice(0,30),hits:"5",imageFlag:"1"};
+  if(S.affid) p.affiliateId=S.affid;
+  return fetch(API+"?"+qs(p)).then(function(r){return r.json()}).then(function(d){
+    var items=(d.Items||[]).map(norm);
+    if(!items.length) return null;
+    var a=normName(name),best=items[0],bl=-1;
+    items.forEach(function(it){var b=normName(it.name),k=0;while(k<a.length&&k<b.length&&a[k]===b[k]) k++;if(k>bl){bl=k;best=it}});
+    return best;
+  });
+}
+function importTop(){
+  if(!S.appid||!S.akey){toast("先に設定でIDとキーを入れてください");return}
+  var arr=pending.slice(0,20),i=0,ok=0,miss=0,out=$("impres");
+  function step(){
+    if(i>=arr.length){
+      pending=pending.slice(arr.length);saveList();renderList();
+      out.innerHTML='<div class="msg" style="text-align:left">取り込み完了:'+ok+'件を投稿済みとしてリストに入れました。'+(miss?miss+'件は商品が見つかりませんでした。':'')+'売れ筋は「今日の再投稿」に並びます。</div>';
+      return;
+    }
+    out.innerHTML='<div class="msg">商品を探しています… '+(i+1)+' / '+arr.length+'</div>';
+    var src=arr[i];
+    lookup(src.name).then(function(it){
+      if(it&&!inList(it.code)){
+        var o={};for(var k in it) o[k]=it[k];
+        o.status="done";o.postedAt=Date.now()-(S.days+1)*86400000;o.count=1;o.addedAt=Date.now();o.sold=src.sold;o.reward=src.reward;
+        L.push(o);ok++;
+      }else if(!it) miss++;
+    }).catch(function(){miss++}).then(function(){i++;setTimeout(step,1200)});
+  }
+  step();
+}
+$("csvgo").onclick=function(){
+  var f=$("csvfile").files&&$("csvfile").files[0];
+  if(f){var rd=new FileReader();rd.onload=function(){doParse(decodeBuf(rd.result))};rd.onerror=function(){toast("ファイルを読めませんでした")};rd.readAsArrayBuffer(f)}
+  else if($("csvtext").value.trim()) doParse($("csvtext").value);
+  else toast("CSVファイルを選ぶか、中身を貼り付けてください");
+};
+
+/* ---------- 5と0のつく日・セールのお知らせ ---------- */
+function parseSales(str){
+  return String(str||"").split("\n").map(function(l){
+    var p=l.split(",").map(function(x){return x.trim()});
+    if(p.length<3) return null;
+    var a=new Date(p[0].replace(" ","T")+":00"),b=new Date(p[1].replace(" ","T")+":00");
+    if(isNaN(a.getTime())||isNaN(b.getTime())) return null;
+    return {s:a,e:b,n:p.slice(2).join(",")};
+  }).filter(Boolean);
+}
+function fmtDT(d){return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+("0"+d.getMinutes()).slice(-2)}
+function bannerLines(now,str){
+  var out=[],d=new Date(now);
+  if(d.getDate()%5===0) out.push("📅 今日は5と0のつく日。投稿を増やすチャンスです");
+  var cur=null,nxt=null;
+  parseSales(str).forEach(function(x){
+    if(now>=x.s.getTime()&&now<=x.e.getTime()){cur=cur||x}
+    else if(x.s.getTime()>now&&(!nxt||x.s<nxt.s)) nxt=x;
+  });
+  if(cur) out.push("🛍 "+cur.n+"開催中(〜"+fmtDT(cur.e)+")。投稿を増やすチャンスです");
+  else if(nxt&&(nxt.s.getTime()-now)<=3*86400000) out.push("⏰ "+nxt.n+"は"+fmtDT(nxt.s)+"から。今のうちに投稿を仕込みましょう");
+  return out;
+}
+function updateBanner(){
+  var el=$("banner");if(!el) return;
+  var lines=bannerLines(Date.now(),S.sales);
+  el.hidden=!lines.length;
+  el.innerHTML=lines.map(esc).join("<br>");
+}
+document.addEventListener("visibilitychange",function(){if(!document.hidden) updateBanner()});
+
+
+/* ---------- コメント文例 ---------- */
+var CMT_SETS={
+  like:[
+    "いいねありがとうございます😊 励みになります!",
+    "見ていただいてありがとうございます✨ いいね、とても嬉しいです。",
+    "いいねをいただけて嬉しいです! これからも暮らしに役立つものを紹介していきますね🍀",
+    "ありがとうございます🙌 そちらのROOMも参考にさせてください。",
+    "素敵なお気持ちをありがとうございます☺️ また遊びに来てくださいね。",
+    "いいね嬉しいです! 気になる商品があれば、いつでも見てみてくださいね📌",
+    "ご覧いただきありがとうございました。これからも少しずつ投稿していきます。",
+    "いいねありがとうございます!お返しにお邪魔しますね👋"
+  ],
+  cmt:[
+    "コメントありがとうございます😊 とても嬉しいです!",
+    "あたたかいコメントをいただき、ありがとうございます✨ 励みになります。",
+    "見てくださって、さらにコメントまで…感激です!ありがとうございます🍀",
+    "コメントありがとうございます! そう言っていただけると投稿した甲斐があります☺️",
+    "ご感想をありがとうございます。参考にしていただけたなら嬉しいです。",
+    "嬉しいお言葉をありがとうございます🙌 また気になるものを見つけたら紹介しますね。",
+    "コメントの一言で、今日一日がんばれそうです😊 ありがとうございます!",
+    "ありがとうございます!そちらの投稿も楽しみに拝見しますね👀"
+  ],
+  out:[
+    "素敵なセレクトですね✨ 思わずチェックしてしまいました!",
+    "写真が見やすくて、使うイメージがわきました📸 参考になります。",
+    "こういうアイテムを探していました。紹介してくださってありがとうございます!",
+    "暮らしに取り入れやすそうで、気になっています☺️",
+    "色もデザインも好みです。保存させていただきますね📌",
+    "まとめ方が丁寧で、見ていて楽しいです。勉強になります!",
+    "説明がわかりやすくて、ほしくなりました笑",
+    "手に取りやすい価格で、試しやすそうですね。いい情報をありがとうございます💡",
+    "実用的でよさそうですね。ほかの投稿も拝見させてください🙌",
+    "季節にぴったりのアイテムですね🍂 素敵な投稿をありがとうございます。"
+  ]
+};
+var cg="like",cCur={like:-1,cmt:-1,out:-1},cQueue={like:[],cmt:[],out:[]};
+function cBuild(t){
+  var n=$("cname").value.trim().replace(/さん$/,""),m=$("cmine").value.trim();
+  return (n?n+"さん、":"")+t+(m?" "+m:"");
+}
+function cNext(){
+  var set=CMT_SETS[cg];
+  if(!cQueue[cg].length){
+    var q=set.map(function(_,i){return i});
+    for(var i=q.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=q[i];q[i]=q[j];q[j]=t}
+    if(q.length>1&&q[0]===cCur[cg]){var t2=q[0];q[0]=q[1];q[1]=t2}
+    cQueue[cg]=q;
+  }
+  cCur[cg]=cQueue[cg].shift();
+}
+function cShow(){$("cshow").textContent=cBuild(CMT_SETS[cg][cCur[cg]])}
+function renderCmt(){
+  document.querySelectorAll("#cgroups .chip").forEach(function(c){c.classList.toggle("on",c.dataset.g===cg)});
+  if(cCur[cg]<0) cNext();
+  cShow();
+  $("clist").innerHTML=CMT_SETS[cg].map(function(t,i){return '<button class="cc" data-i="'+i+'">'+esc(cBuild(t))+'<small>タップでコピー</small></button>'}).join("");
+  document.querySelectorAll("#clist .cc").forEach(function(b){b.onclick=function(){
+    var i=parseInt(b.dataset.i,10);cCur[cg]=i;cShow();
+    copy(cBuild(CMT_SETS[cg][i]),"コピーしました。ROOMのコメント欄に貼り付けてください");
+  }});
+}
+document.querySelectorAll("#cgroups .chip").forEach(function(c){c.onclick=function(){cg=c.dataset.g;renderCmt()}});
+$("cnext").onclick=function(){cNext();cShow()};
+$("ccopy").onclick=function(){copy($("cshow").textContent,"コピーしました。ROOMのコメント欄に貼り付けてください")};
+$("cname").oninput=$("cmine").oninput=function(){renderCmt()};
+
+fillSettings();updateBadge();updateBanner();
 if(!S.appid||!S.akey){
   $("results").innerHTML='<div class="panel"><b>はじめに</b><ol class="steps" style="margin-top:6px">'+
     '<li>楽天ウェブサービスでアプリIDとアクセスキーを発行します。</li>'+
