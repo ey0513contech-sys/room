@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ROOM投稿">
 <meta name="theme-color" content="#1F3A5F">
+<meta name="referrer" content="origin">
 <title>ROOM投稿ノート</title>
 <style>
 :root{
@@ -238,7 +239,7 @@ function buildParams(page){
   var p={format:"json",formatVersion:"2",applicationId:S.appid,accessKey:S.akey,
     keyword:$("kw").value.trim(),hits:"30",page:String(page),imageFlag:"1",availability:"1"};
   var s=$("sort").value;if(s!=="standard") p.sort=s;
-  if($("minp").value) p.minPrice=$("minp").value;
+  if(Number($("minp").value)>0) p.minPrice=$("minp").value;
   if($("maxp").value) p.maxPrice=$("maxp").value;
   if(S.affid) p.affiliateId=S.affid;
   return p;
@@ -256,9 +257,21 @@ function jsonp(url){
     document.head.appendChild(sc);
   });
 }
+var lastDiag="";
 function callApi(page){
   var url=API+"?"+qs(buildParams(page));
-  return fetch(url).then(function(r){return r.json()}).catch(function(){return jsonp(url)});
+  lastDiag="";
+  return fetch(url).then(function(r){
+    return r.text().then(function(t){
+      var d;
+      try{d=JSON.parse(t)}catch(e){lastDiag="HTTP "+r.status+" "+t.slice(0,120);throw new Error("badjson")}
+      if(!r.ok&&!d.error&&!d.errors){d.error="HTTP "+r.status}
+      return d;
+    });
+  },function(e){
+    lastDiag="fetch失敗("+(e&&e.message||e)+")";
+    return jsonp(url).catch(function(e2){lastDiag+=" / 別方式も失敗";throw e2});
+  });
 }
 function norm(it){
   if(it.Item) it=it.Item;
@@ -284,10 +297,11 @@ function search(p){
     renderResults();
   }).catch(function(e){
     var m=String(e&&e.message||"");
-    var tip="通信できませんでした。電波状況と、楽天ウェブサービスの「許可されたWebサイト」にこのアプリのURLが登録されているか確認してください。";
+    var tip="通信できませんでした。電波状況と、楽天ウェブサービスの「許可されたWebサイト」にこのアプリのドメインが登録されているか確認してください。";
     if(/applicationId|accessKey|wrong_parameter|specify/i.test(m)) tip="アプリIDかアクセスキーが正しくないようです。「設定」を確認してください。";
     if(/too_many|429/i.test(m)) tip="短時間に検索しすぎています。少し待ってからもう一度さがしてください。";
-    $("results").innerHTML='<div class="msg err">'+esc(tip)+'</div>';$("more").innerHTML="";
+    if(/403|REQUEST_CONTEXT|referer|origin|forbidden/i.test(m+lastDiag)) tip="楽天に拒否されました。「許可されたWebサイト」にこのアプリのドメインが入っているか確認してください。";
+    $("results").innerHTML='<div class="msg err">'+esc(tip)+'</div><div class="msg" style="font-size:12px;word-break:break-all">詳細:'+esc((lastDiag||m).slice(0,200))+'</div>';$("more").innerHTML="";
   });
 }
 $("go").onclick=function(){search(1)};
