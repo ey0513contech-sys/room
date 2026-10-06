@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ROOM投稿">
+<meta name="theme-color" content="#1F3A5F">
+<title>ROOM投稿ノート</title>
+<style>
+:root{
+  --ink:#1F2733; --sub:#5B6676; --line:#D9DEE5; --bg:#EEF1F4; --card:#FFFFFF;
+  --navy:#1F3A5F; --room:#BF0000; --ok:#2F7D4F; --warn:#B7791F;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#E8ECF1; --sub:#9AA5B4; --line:#2E3744; --bg:#12171E; --card:#1B222C;
+    --navy:#8FB3E0; --room:#FF5A5A; --ok:#5CC48A; --warn:#E5B04A;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E8ECF1; --sub:#9AA5B4; --line:#2E3744; --bg:#12171E; --card:#1B222C;
+  --navy:#8FB3E0; --room:#FF5A5A; --ok:#5CC48A; --warn:#E5B04A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
+header{padding:14px 16px 8px}
+header h1{margin:0;font-size:22px;letter-spacing:.02em;color:var(--navy)}
+header p{margin:2px 0 0;font-size:13px;color:var(--sub)}
+main{padding:0 12px calc(90px + env(safe-area-inset-bottom,0px))}
+.view{display:none}.view.on{display:block}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:13px;padding:10px 0 12px;position:relative}
+nav button.on{color:var(--navy);font-weight:700}
+nav button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;background:var(--navy);border-radius:0 0 3px 3px}
+.badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:3px;border-radius:9px;background:var(--room);color:#fff;font-size:11px;line-height:18px}
+.panel{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:170px;resize:vertical}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font:inherit;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}
+.btn.main{background:var(--navy);color:#fff}
+.btn.room{background:var(--room);color:#fff}
+.btn.plain{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.btn+.btn{margin-top:8px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+.msg{font-size:14px;color:var(--sub);padding:18px 6px;text-align:center}
+.msg.err{color:var(--room)}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.item{background:var(--card);border-radius:12px;overflow:hidden;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative}
+.item img{width:100%;aspect-ratio:1;object-fit:contain;background:#fff;display:block}
+.item .t{font-size:12.5px;line-height:1.45;padding:7px 8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .p{font-weight:700;padding:2px 8px 8px;font-size:15px}
+.item .r{font-size:11.5px;color:var(--sub);padding:0 8px 8px;margin-top:-6px}
+.saved-mark{position:absolute;top:6px;left:6px;background:var(--navy);color:#fff;font-size:11px;padding:1px 7px;border-radius:8px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:20}
+.sheet.on{display:block}
+.sheet .box{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;background:var(--card);border-radius:18px 18px 0 0;padding:14px 14px calc(20px + env(safe-area-inset-bottom,0px))}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.gallery{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.gallery img{width:110px;height:110px;object-fit:contain;background:#fff;border-radius:10px;border:2px solid transparent;flex:none}
+.gallery img.sel{border-color:var(--room)}
+.hint{font-size:12.5px;color:var(--sub);margin:4px 0 0}
+.sname{font-size:15px;font-weight:700;margin:8px 0 2px;line-height:1.5}
+.meta{font-size:13px;color:var(--sub)}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:6px 12px;font:inherit;font-size:13px}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.li{display:flex;gap:10px;background:var(--card);border-radius:12px;padding:10px;margin-bottom:8px;align-items:center}
+.li img{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:8px;flex:none}
+.li .b{flex:1;min-width:0}
+.li .n{font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.st{font-size:12px;font-weight:700}
+.st.new{color:var(--warn)}.st.done{color:var(--ok)}.st.again{color:var(--room)}
+.li button{border:0;background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;flex:none}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;white-space:nowrap}
+.toast.on{opacity:1}
+.steps{margin:0;padding-left:20px;font-size:14px}
+.steps li{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ROOM投稿ノート</h1>
+  <p id="sub">商品を探して、紹介文を作って、楽天ROOMへ</p>
+</header>
+
+<main>
+  <!-- 商品をさがす -->
+  <section class="view on" id="v-search">
+    <div class="panel">
+      <label for="kw">キーワード</label>
+      <input id="kw" type="search" placeholder="例:収納ボックス、保温ボトル" enterkeyhint="search">
+      <div class="row">
+        <div><label for="sort">並び順</label>
+          <select id="sort">
+            <option value="-reviewCount">レビューが多い順</option>
+            <option value="-reviewAverage">評価が高い順</option>
+            <option value="standard">楽天の標準</option>
+            <option value="+itemPrice">価格が安い順</option>
+            <option value="-itemPrice">価格が高い順</option>
+            <option value="-updateTimestamp">新着順</option>
+          </select></div>
+      </div>
+      <div class="row">
+        <div><label for="minp">最低価格</label><input id="minp" type="number" inputmode="numeric" placeholder="円"></div>
+        <div><label for="maxp">最高価格</label><input id="maxp" type="number" inputmode="numeric" placeholder="円"></div>
+      </div>
+      <div style="height:12px"></div>
+      <button class="btn main" id="go">商品をさがす</button>
+    </div>
+    <div id="results"></div>
+    <div id="more"></div>
+  </section>
+
+  <!-- 投稿リスト -->
+  <section class="view" id="v-list">
+    <div class="chips" id="filters">
+      <button class="chip on" data-f="new">未投稿</button>
+      <button class="chip" data-f="again">再投稿の候補</button>
+      <button class="chip" data-f="done">投稿済み</button>
+      <button class="chip" data-f="all">すべて</button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- 設定 -->
+  <section class="view" id="v-set">
+    <div class="panel">
+      <label for="appid">アプリID(applicationId)</label>
+      <input id="appid" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="楽天ウェブサービスで発行">
+      <label for="akey">アクセスキー(accessKey)</label>
+      <input id="akey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pk_ から始まるキー">
+      <label for="affid">アフィリエイトID(なくても動きます)</label>
+      <input id="affid" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="days">再投稿の候補にする日数</label>
+      <input id="days" type="number" inputmode="numeric" value="30">
+      <p class="hint">投稿済みにしてからこの日数がたった商品を「再投稿の候補」に出します。</p>
+      <label for="tags">いつも付けるハッシュタグ</label>
+      <input id="tags" placeholder="例:#楽天ROOM #暮らしを整える">
+      <div style="height:12px"></div>
+      <button class="btn main" id="save">設定を保存</button>
+    </div>
+    <div class="panel">
+      <label for="tpl">紹介文のテンプレート</label>
+      <textarea id="tpl"></textarea>
+      <p class="hint">使える差し込み:{ひとこと} {商品名} {特徴} {サイズ} {シーン} {注意点} {向いている人} {価格} {評価} {レビュー数} {ショップ} {タグ}。===== の行で区切ると複数パターンを切り替えられます。中身が見つからなかった行は自動で消えます。</p>
+      <div style="height:10px"></div>
+      <button class="btn plain" id="tplreset">テンプレートを初期状態に戻す</button>
+    </div>
+    <div class="panel">
+      <label>データ</label>
+      <p class="hint" id="count"></p>
+      <div style="height:8px"></div>
+      <button class="btn plain" id="export">投稿リストを書き出してコピー</button>
+      <button class="btn plain" id="import">コピーした投稿リストを読み込む</button>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-v="search">さがす</button>
+  <button data-v="list">投稿リスト<span class="badge" id="nbadge" hidden></span></button>
+  <button data-v="set">設定</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="box" id="sbox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+var API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601";
+var TPL_VER = 2;
+var DEFAULT_TPL = [
+"{ひとこと}\n{商品名}\n\n✔ {特徴}\n✔ {サイズ}\n✔ レビュー{レビュー数}件・★{評価}\n\n{シーン}\n{注意点}\n\nこんな人に👉 {向いている人}\n\n{タグ}",
+"📝 次の買い物用メモ\n{商品名}\n\n{シーン}\n{特徴}\n\n・価格:{価格}円(投稿時点)\n・{サイズ}\n・{注意点}\n\n{向いている人}に合いそう。\n\n{タグ}",
+"{ひとこと}✨\n\n{特徴}\n{シーン}\n\n★{評価}(レビュー{レビュー数}件)\n{価格}円(投稿時点)\n\n{タグ}"
+].join("\n=====\n");
+
+/* ---------- 保存まわり ---------- */
+function load(k,d){try{var v=localStorage.getItem("rn_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}}
+function store(k,v){try{localStorage.setItem("rn_"+k,JSON.stringify(v));return true}catch(e){return false}}
+var S = load("settings",{appid:"",akey:"",affid:"",days:30,tags:"#楽天ROOM #楽天市場",tpl:DEFAULT_TPL});
+if(!S.tpl||S.tplVer!==TPL_VER){S.tpl=DEFAULT_TPL;S.tplVer=TPL_VER;store("settings",S)}
+var L = load("list",[]);   // {code,name,price,url,imgs,img,shop,rev,avg,caption,status,postedAt,count,text,addedAt}
+
+var $ = function(id){return document.getElementById(id)};
+function toast(t){var el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove("on")},1800)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
+function yen(n){return Number(n||0).toLocaleString("ja-JP")}
+function daysSince(t){return t?Math.floor((Date.now()-t)/86400000):null}
+
+/* ---------- 画面切り替え ---------- */
+var navs = document.querySelectorAll("nav button");
+function show(v){
+  navs.forEach(function(b){b.classList.toggle("on",b.dataset.v===v)});
+  ["search","list","set"].forEach(function(n){$("v-"+n).classList.toggle("on",n===v)});
+  if(v==="list") renderList();
+  window.scrollTo(0,0);
+}
+navs.forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+
+/* ---------- 設定 ---------- */
+function fillSettings(){
+  $("appid").value=S.appid;$("akey").value=S.akey;$("affid").value=S.affid;
+  $("days").value=S.days;$("tags").value=S.tags;$("tpl").value=S.tpl;
+  $("count").textContent="投稿リストに "+L.length+" 件 保存されています。データはこのスマホのブラウザ内だけに保存されます。";
+}
+$("save").onclick=function(){
+  S.appid=$("appid").value.trim();S.akey=$("akey").value.trim();S.affid=$("affid").value.trim();
+  S.days=Math.max(1,parseInt($("days").value,10)||30);S.tags=$("tags").value.trim();
+  S.tpl=$("tpl").value.trim()||DEFAULT_TPL;
+  toast(store("settings",S)?"設定を保存しました":"保存できませんでした");
+};
+$("tpl").onchange=function(){S.tpl=$("tpl").value.trim()||DEFAULT_TPL;store("settings",S)};
+$("tplreset").onclick=function(){S.tpl=DEFAULT_TPL;$("tpl").value=DEFAULT_TPL;store("settings",S);toast("初期状態に戻しました")};
+$("export").onclick=function(){copy(JSON.stringify(L),"投稿リストをコピーしました。メモ帳などに貼って保管できます")};
+$("import").onclick=function(){
+  var t=prompt("書き出した投稿リストを貼り付けてください");
+  if(!t) return;
+  try{var d=JSON.parse(t);if(!Array.isArray(d)) throw 0;
+    var have={};L.forEach(function(x){have[x.code]=1});
+    var n=0;d.forEach(function(x){if(x&&x.code&&!have[x.code]){L.push(x);n++}});
+    saveList();fillSettings();toast(n+"件 読み込みました");
+  }catch(e){toast("読み込めない形式です")}
+};
+
+/* ---------- 楽天API ---------- */
+function buildParams(page){
+  var p={format:"json",formatVersion:"2",applicationId:S.appid,accessKey:S.akey,
+    keyword:$("kw").value.trim(),hits:"30",page:String(page),imageFlag:"1",availability:"1"};
+  var s=$("sort").value;if(s!=="standard") p.sort=s;
+  if($("minp").value) p.minPrice=$("minp").value;
+  if($("maxp").value) p.maxPrice=$("maxp").value;
+  if(S.affid) p.affiliateId=S.affid;
+  return p;
+}
+function qs(p){return Object.keys(p).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(p[k])}).join("&")}
+function jsonp(url){
+  return new Promise(function(res,rej){
+    var cb="rncb"+Date.now()+Math.floor(Math.random()*1000);
+    var sc=document.createElement("script");
+    var timer=setTimeout(function(){clean();rej(new Error("timeout"))},12000);
+    function clean(){clearTimeout(timer);try{delete window[cb]}catch(e){window[cb]=undefined}sc.remove()}
+    window[cb]=function(d){clean();res(d)};
+    sc.onerror=function(){clean();rej(new Error("network"))};
+    sc.src=url+"&callback="+cb;
+    document.head.appendChild(sc);
+  });
+}
+function callApi(page){
+  var url=API+"?"+qs(buildParams(page));
+  return fetch(url).then(function(r){return r.json()}).catch(function(){return jsonp(url)});
+}
+function norm(it){
+  if(it.Item) it=it.Item;
+  var imgs=(it.mediumImageUrls||[]).map(function(x){return typeof x==="string"?x:x.imageUrl}).filter(Boolean)
+    .map(function(u){return u.replace(/\?_ex=\d+x\d+/,"?_ex=400x400")});
+  return {code:it.itemCode,name:it.itemName,price:it.itemPrice,url:it.affiliateUrl||it.itemUrl,itemUrl:it.itemUrl,
+    imgs:imgs,img:imgs[0]||"",shop:it.shopName,rev:it.reviewCount,avg:it.reviewAverage,caption:it.itemCaption||"",catch:it.catchcopy||""};
+}
+
+var cur=[],page=1,maxPage=1;
+function search(p){
+  if(!S.appid||!S.akey){$("results").innerHTML='<div class="msg err">先に「設定」でアプリIDとアクセスキーを入れてください。</div>';return}
+  if(!$("kw").value.trim()){toast("キーワードを入れてください");return}
+  if(p===1){cur=[];$("results").innerHTML='<div class="msg">さがしています…</div>';$("more").innerHTML=""}
+  else $("more").innerHTML='<div class="msg">読み込み中…</div>';
+  callApi(p).then(function(d){
+    if(d.error||d.errors){
+      var m=d.error_description||(d.errors&&d.errors.errorMessage)||d.error||"エラー";
+      throw new Error(m);
+    }
+    page=p;maxPage=Math.min(d.pageCount||1,30);
+    cur=cur.concat((d.Items||[]).map(norm));
+    renderResults();
+  }).catch(function(e){
+    var m=String(e&&e.message||"");
+    var tip="通信できませんでした。電波状況と、楽天ウェブサービスの「許可されたWebサイト」にこのアプリのURLが登録されているか確認してください。";
+    if(/applicationId|accessKey|wrong_parameter|specify/i.test(m)) tip="アプリIDかアクセスキーが正しくないようです。「設定」を確認してください。";
+    if(/too_many|429/i.test(m)) tip="短時間に検索しすぎています。少し待ってからもう一度さがしてください。";
+    $("results").innerHTML='<div class="msg err">'+esc(tip)+'</div>';$("more").innerHTML="";
+  });
+}
+$("go").onclick=function(){search(1)};
+$("kw").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();this.blur();search(1)}});
+
+function inList(code){for(var i=0;i<L.length;i++) if(L[i].code===code) return L[i];return null}
+function renderResults(){
+  if(!cur.length){$("results").innerHTML='<div class="msg">見つかりませんでした。キーワードを短くするか、価格の条件を外してみてください。</div>';$("more").innerHTML="";return}
+  $("results").innerHTML='<div class="items">'+cur.map(function(it,i){
+    var s=inList(it.code);
+    return '<button class="item" data-i="'+i+'">'+(s?'<span class="saved-mark">リスト済み</span>':'')+
+      '<img loading="lazy" alt="" src="'+esc(it.img)+'"><div class="t">'+esc(it.name)+'</div>'+
+      '<div class="p">'+yen(it.price)+'円</div><div class="r">★'+esc(it.avg)+'('+yen(it.rev)+'件)</div></button>';
+  }).join("")+'</div>';
+  document.querySelectorAll(".item").forEach(function(b){b.onclick=function(){openSheet(inList(cur[b.dataset.i].code)||cur[b.dataset.i])}});
+  $("more").innerHTML=page<maxPage?'<div style="height:10px"></div><button class="btn plain" id="mbtn">もっと見る</button>':"";
+  if($("mbtn")) $("mbtn").onclick=function(){search(page+1)};
+}
+
+/* ---------- 紹介文づくり ---------- */
+function shortName(n){
+  var s=String(n||"").replace(/【[^】]*】|\[[^\]]*\]|［[^］]*］|＼[^／]*／|★|☆|送料無料|ポイント\d+倍|楽天\d+位|クーポン[^ ]*/g," ")
+    .replace(/\s+/g," ").trim();
+  return s.length>40?s.slice(0,40)+"…":s;
+}
+function feature(it){
+  var src=(it.catch||"")+" "+(it.caption||"");
+  src=src.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  var parts=src.split(/[。！!■□◆◇●○※【】\n]/).map(function(x){return x.trim()}).filter(function(x){return x.length>=8&&x.length<=60&&!/送料|ポイント|クーポン|返品|配送|お届け|注意|JAN|サイズ|寸法|素材|材質|重量|重さ|原産|生産国|容量|cm|mm|ｃｍ|[::]/i.test(x)});
+  return parts.length?parts[0]+"。":"毎日の暮らしで使いやすいアイテムです。";
+}
+function makeTags(it){
+  var base=S.tags||"";
+  var kw=$("kw").value.trim().split(/\s+/).filter(Boolean).slice(0,2).map(function(k){return "#"+k.replace(/[#\s]/g,"")}).join(" ");
+  return (base+" "+kw).trim();
+}
+var CATS=[
+ {re:/キッチン|鍋|フライパン|包丁|保存容器|食器|まな板|弁当/,scene:"毎日の料理や片付けのひと手間を減らしてくれそうなアイテムです。",who:"料理をもっと時短したい人",note:"置き場所のサイズを測ってから選ぶと安心です。"},
+ {re:/収納|ボックス|ラック|棚|ケース|ハンガー|整理/,scene:"散らかりがちな場所をすっきりまとめられて、片付けが続けやすくなりそう。",who:"部屋をすっきり見せたい人",note:"置きたい場所の幅と奥行きを測ってから選ぶと失敗しにくいです。"},
+ {re:/掃除|洗剤|モップ|クリーナー|洗濯|ほうき|ワイパー/,scene:"家事のひと手間が減ると、気持ちにも余裕が出ます。",who:"家事を少しでもラクにしたい人",note:"使える素材や場所はページで確認してから選ぶと安心です。"},
+ {re:/化粧|コスメ|美容|スキンケア|ヘア|ドライヤー|シャンプー|美容液/,scene:"毎日のケア時間がちょっと楽しみになりそうなアイテム。",who:"自分へのごほうびを探している人",note:"肌や髪に合うかは成分表示もチェックしてみてください。"},
+ {re:/レディース|メンズ|ワンピース|パンツ|スカート|ニット|シャツ|バッグ|靴|スニーカー|コート|ジャケット/,scene:"合わせやすくて、出番が多くなりそうなアイテムです。",who:"着回ししやすいものを探している人",note:"サイズ表はページで確認してから選ぶのがおすすめです。"},
+ {re:/キッズ|ベビー|子供|子ども|赤ちゃん|幼児|ランドセル/,scene:"子どもとの毎日を少しラクにしてくれそう。",who:"子育て中で手間を減らしたい人",note:"対象年齢やサイズはページで確認してから選ぶと安心です。"},
+ {re:/お米|精米|肉|海鮮|スイーツ|お菓子|コーヒー|紅茶|お茶|食品|訳あり|ふるさと|グルメ/,scene:"ストックしておくと、おうち時間のちょっとした楽しみになります。",who:"おうち時間を楽しみたい人",note:"内容量やお届け時期はページで確認してください。"},
+ {re:/ボトル|水筒|アウトドア|キャンプ|傘|レジャー/,scene:"お出かけの日にあると安心できるアイテム。",who:"外出やレジャーが多い人",note:"容量やサイズは使う場面に合うか確認してから選ぶと安心です。"}
+];
+var DEF_CAT={scene:"毎日の暮らしの中で使う場面が多そうなアイテムです。",who:"長く使えるものを探している人",note:"色やサイズの種類はページで確認してから選ぶと安心です。"};
+function catOf(it){var src=(it.name||"")+" "+$("kw").value;for(var i=0;i<CATS.length;i++) if(CATS[i].re.test(src)) return CATS[i];return DEF_CAT}
+function sizeOf(it){
+  var src=String(it.caption||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
+  var m=src.match(/(?:サイズ|寸法|外寸|本体)[::】\]\s]*((?:約|幅|W|高さ|H|奥行|D)[^。■◆※]{4,45})/)||
+        src.match(/((?:幅|W)\s*約?\s*[\d.]+\s*(?:cm|mm|ｃｍ)[^。■◆※]{0,35})/i);
+  if(!m) return "";
+  return "サイズ:"+m[1].trim().replace(/[、,\s]+$/,"");
+}
+function hook(it){
+  var r=Number(it.rev||0),a=Number(it.avg||0);
+  if(r>=1000) return "レビュー"+yen(Math.floor(r/1000)*1000)+"件超えの人気アイテム";
+  if(a>=4.5&&r>=30) return "評価★"+a+"の高評価アイテム";
+  if(r>=100) return "レビュー"+yen(r)+"件、みんなが選んでいるアイテム";
+  return "気になってチェックしたアイテム";
+}
+function makeText(it,idx){
+  var pats=S.tpl.split(/\n?=====\n?/).filter(function(x){return x.trim()});
+  if(!pats.length) pats=DEFAULT_TPL.split(/\n?=====\n?/);
+  var t=pats[(idx==null?Math.floor(Math.random()*pats.length):idx)%pats.length];
+  var c=catOf(it),size=sizeOf(it);
+  var map={"ひとこと":hook(it),"商品名":shortName(it.name),"価格":yen(it.price),"評価":it.avg||"-","レビュー数":yen(it.rev),
+    "ショップ":it.shop||"","特徴":feature(it),"サイズ":size,"シーン":c.scene,"向いている人":c.who,
+    "注意点":size&&c===DEF_CAT?"置き場所や使う場所のサイズを測ってから選ぶと安心です。":c.note,"タグ":makeTags(it)};
+  var out=t.replace(/\{(ひとこと|商品名|価格|評価|レビュー数|ショップ|特徴|サイズ|シーン|注意点|向いている人|タグ)\}/g,function(_,k){return map[k]});
+  return out.split("\n").filter(function(l){return !/^\s*(✔|・|-)\s*$/.test(l)}).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+function roomUrl(it){
+  return "https://room.rakuten.co.jp/mix?itemcode="+encodeURIComponent(it.code)+"&scid=we_room_upc60";
+}
+
+/* ---------- 詳細シート ---------- */
+var patIdx=0,sheetItem=null;
+function openSheet(it){
+  sheetItem=it;
+  var saved=inList(it.code);
+  var text=(saved&&saved.text)||makeText(it,patIdx);
+  var st=saved?statusOf(saved):null;
+  $("sbox").innerHTML='<div class="grab"></div>'+
+    '<div class="gallery">'+it.imgs.map(function(u,i){return '<img alt="商品画像'+(i+1)+'" src="'+esc(u)+'" data-u="'+esc(u)+'" class="'+(u===(saved?saved.img:it.img)?"sel":"")+'">'}).join("")+'</div>'+
+    '<p class="hint">ROOMで投稿するときに選ぶ画像の目安として、気に入った1枚をタップしておけます。</p>'+
+    '<div class="sname">'+esc(it.name)+'</div>'+
+    '<div class="meta">'+yen(it.price)+'円 ・ ★'+esc(it.avg)+'('+yen(it.rev)+'件) ・ '+esc(it.shop)+'</div>'+
+    (st?'<div class="st '+st.c+'" style="margin-top:4px">'+st.t+'</div>':'')+
+    '<label for="ptext">紹介文(自由に書きかえられます)</label><textarea id="ptext">'+esc(text)+'</textarea>'+
+    '<div style="height:8px"></div>'+
+    '<div class="row"><button class="btn plain" id="b-re">別の文章にする</button><button class="btn main" id="b-copy">文章をコピー</button></div>'+
+    '<div style="height:8px"></div>'+
+    '<a class="btn room" id="b-room" href="'+esc(roomUrl(it))+'" target="_blank" rel="noopener">楽天ROOMで投稿する</a>'+
+    '<a class="btn plain" href="'+esc(it.itemUrl||it.url)+'" target="_blank" rel="noopener">楽天市場の商品ページを見る</a>'+
+    (saved?'<button class="btn plain" id="b-done">投稿済みにする</button><button class="btn plain" id="b-del">投稿リストから外す</button>'
+          :'<button class="btn plain" id="b-add">投稿リストに入れる</button>')+
+    '<button class="btn plain" id="b-close">閉じる</button>';
+  $("sheet").classList.add("on");
+  $("sbox").scrollTop=0;
+  document.querySelectorAll(".gallery img").forEach(function(im){im.onclick=function(){
+    document.querySelectorAll(".gallery img").forEach(function(x){x.classList.remove("sel")});im.classList.add("sel");
+    it.img=im.dataset.u;var s=inList(it.code);if(s){s.img=im.dataset.u;saveList()}
+  }});
+  $("ptext").oninput=function(){var s=inList(it.code);if(s){s.text=this.value;saveList()}};
+  $("b-re").onclick=function(){patIdx++;$("ptext").value=makeText(it,patIdx);var s=inList(it.code);if(s){s.text=$("ptext").value;saveList()}};
+  $("b-copy").onclick=function(){copy($("ptext").value,"コピーしました。ROOMの投稿画面に貼り付けてください")};
+  $("b-room").onclick=function(){copy($("ptext").value,"文章をコピーして楽天ROOMを開きます");addIfNeeded(it)};
+  if($("b-add")) $("b-add").onclick=function(){addIfNeeded(it);toast("投稿リストに入れました");openSheet(inList(it.code))};
+  if($("b-done")) $("b-done").onclick=function(){markDone(it.code);openSheet(inList(it.code))};
+  if($("b-del")) $("b-del").onclick=function(){if(confirm("投稿リストから外しますか?")){L=L.filter(function(x){return x.code!==it.code});saveList();closeSheet();toast("外しました")}};
+  $("b-close").onclick=closeSheet;
+}
+function closeSheet(){$("sheet").classList.remove("on");if($("v-list").classList.contains("on")) renderList();else if(cur.length) renderResults()}
+$("sheet").onclick=function(e){if(e.target===this) closeSheet()};
+
+function addIfNeeded(it){
+  if(inList(it.code)) return;
+  var o={};for(var k in it) o[k]=it[k];
+  o.status="new";o.postedAt=null;o.count=0;o.addedAt=Date.now();
+  o.text=$("ptext")?$("ptext").value:makeText(it);
+  L.unshift(o);saveList();
+}
+function markDone(code){var s=inList(code);if(!s) return;s.status="done";s.postedAt=Date.now();s.count=(s.count||0)+1;saveList();toast("投稿済みにしました")}
+function saveList(){store("list",L);updateBadge()}
+
+function copy(t,msg){
+  var ok=function(){toast(msg)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok).catch(function(){fallback(t);ok()})}
+  else{fallback(t);ok()}
+}
+function fallback(t){var a=document.createElement("textarea");a.value=t;a.setAttribute("readonly","");a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove()}
+
+/* ---------- 投稿リスト ---------- */
+var filter="new";
+function statusOf(x){
+  if(x.status!=="done") return {k:"new",c:"new",t:"未投稿"};
+  var d=daysSince(x.postedAt);
+  if(d>=S.days) return {k:"again",c:"again",t:"前回の投稿から"+d+"日・再投稿の候補"};
+  return {k:"done",c:"done",t:"投稿済み("+(d===0?"今日":d+"日前")+"・"+(x.count||1)+"回目)"};
+}
+function updateBadge(){
+  var n=L.filter(function(x){return statusOf(x).k==="again"}).length;
+  var b=$("nbadge");b.hidden=!n;b.textContent=n;
+}
+document.querySelectorAll("#filters .chip").forEach(function(c){c.onclick=function(){
+  filter=c.dataset.f;document.querySelectorAll("#filters .chip").forEach(function(x){x.classList.toggle("on",x===c)});renderList();
+}});
+function renderList(){
+  var arr=L.filter(function(x){return filter==="all"||statusOf(x).k===filter});
+  if(filter==="again"||filter==="done") arr.sort(function(a,b){return (a.postedAt||0)-(b.postedAt||0)});
+  if(!arr.length){
+    var m={new:"未投稿の商品はありません。「さがす」で商品を開き、「投稿リストに入れる」を押すとここに並びます。",
+      again:"再投稿の候補はまだありません。投稿済みにしてから"+S.days+"日たつとここに出ます。",
+      done:"投稿済みの商品はまだありません。",all:"投稿リストは空です。「さがす」から商品を追加してください。"}[filter];
+    $("list").innerHTML='<div class="msg">'+esc(m)+'</div>';return;
+  }
+  $("list").innerHTML=arr.map(function(x){var s=statusOf(x);
+    return '<div class="li"><img alt="" loading="lazy" src="'+esc(x.img)+'"><div class="b" data-c="'+esc(x.code)+'"><div class="n">'+esc(shortName(x.name))+'</div><div class="st '+s.c+'">'+esc(s.t)+'</div></div>'+
+      '<button data-open="'+esc(x.code)+'">開く</button></div>';
+  }).join("");
+  document.querySelectorAll("[data-open],.li .b").forEach(function(b){b.onclick=function(){openSheet(inList(b.dataset.open||b.dataset.c))}});
+}
+
+fillSettings();updateBadge();
+if(!S.appid||!S.akey){
+  $("results").innerHTML='<div class="panel"><b>はじめに</b><ol class="steps" style="margin-top:6px">'+
+    '<li>楽天ウェブサービスでアプリIDとアクセスキーを発行します。</li>'+
+    '<li>「設定」に貼り付けて保存します。</li>'+
+    '<li>キーワードで商品をさがし、紹介文をコピーして「楽天ROOMで投稿する」を押します。</li></ol></div>';
+}
+})();
+</script>
+</body>
+</html>
